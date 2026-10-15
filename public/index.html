@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sneaker Resell Profit Calculator – StockX vs GOAT vs Flight Club</title>
+<meta name="description" content="Enter a sneaker SKU and see per-size resale prices on StockX, GOAT, Flight Club and Stadium Goods, your payout after fees and your profit.">
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --text:#e9ecf1; --muted:#9aa3b2; --accent:#22c55e; --red:#ef4444; --amber:#f59e0b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:22px 28px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header h1 { font-size:20px; margin:0; }
+  header .tag { font-size:12px; color:var(--muted); }
+  .demo { background:var(--amber); color:#111; font-weight:600; font-size:12px; padding:3px 8px; border-radius:6px; display:none; }
+  main { max-width:1180px; margin:0 auto; padding:24px 20px 60px; display:grid; gap:20px; grid-template-columns: 340px 1fr; }
+  @media (max-width: 900px) { main { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; }
+  label { display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
+  input { width:100%; padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:#0f1218; color:var(--text); font-size:15px; }
+  button { margin-top:12px; width:100%; padding:11px; border:0; border-radius:9px; background:var(--accent); color:#06210f; font-weight:700; font-size:15px; cursor:pointer; }
+  .fees { display:grid; grid-template-columns: 1fr 64px 64px 64px; gap:6px; align-items:center; font-size:13px; }
+  .fees input { padding:6px; font-size:13px; text-align:right; }
+  .fees .h { color:var(--muted); font-size:11px; text-align:right; }
+  .small { font-size:12px; color:var(--muted); }
+  .product { display:flex; gap:16px; align-items:center; }
+  .product img { width:150px; height:90px; object-fit:contain; background:#f4f5f7; border-radius:10px; }
+  .product h2 { margin:0 0 4px; font-size:18px; }
+  .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:16px; }
+  .kpi { background:#11141a; border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+  .kpi .v { font-size:20px; font-weight:700; }
+  .kpi .l { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  table { width:100%; border-collapse:collapse; margin-top:14px; font-variant-numeric: tabular-nums; }
+  th, td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:right; }
+  th:first-child, td:first-child { text-align:left; }
+  th { font-size:12px; color:var(--muted); font-weight:600; }
+  td .p { display:block; font-size:12px; }
+  .pos { color:var(--accent); } .neg { color:var(--red); }
+  .best { background:rgba(34,197,94,.10); border-radius:6px; }
+  .empty { color:var(--muted); padding:40px; text-align:center; }
+  footer { text-align:center; color:var(--muted); font-size:12px; padding:20px; }
+  a { color:#7dd3fc; }
+</style>
+</head>
+<body>
+<header>
+  <h1>👟 Sneaker Resell Profit Calculator</h1>
+  <span class="tag">StockX · GOAT · Flight Club · Stadium Goods</span>
+  <span class="demo" id="demo">DEMO MODE – sample data</span>
+</header>
+<main>
+  <section class="card">
+    <form id="f">
+      <label for="sku">Style code / SKU</label>
+      <input id="sku" value="DD1391-100" placeholder="e.g. DD1391-100" required>
+      <label for="cost">Your cost (what you paid)</label>
+      <input id="cost" type="number" step="0.01" value="85">
+      <label for="ship">Your shipping cost to the platform</label>
+      <input id="ship" type="number" step="0.01" value="0">
+      <button>Calculate profit</button>
+    </form>
+    <h3 style="margin:22px 0 6px;font-size:14px">Platform fees <span class="small">(edit to match your seller level)</span></h3>
+    <div class="fees" id="fees">
+      <span></span><span class="h">Fee %</span><span class="h">Pay %</span><span class="h">Fixed</span>
+    </div>
+    <p class="small">Defaults are rough estimates. Fees change and depend on your seller level and country, so check each platform's current fee page.</p>
+  </section>
+
+  <section class="card" id="out"><div class="empty">Enter a SKU to compare payouts per size.</div></section>
+</main>
+<footer>Data: <a href="https://rapidapi.com/belchiorarkad-FqvHs2EDOtP/api/sneaker-database-stockx" target="_blank" rel="noopener">Sneaker Database – StockX API</a> · Support: <a href="https://t.me/pintoflow" target="_blank" rel="noopener">Telegram @pintoflow</a><br>Not affiliated with StockX, GOAT, Flight Club or Stadium Goods.</footer>
+
+<script>
+const PLATFORMS = [
+  { id: 'stockX', name: 'StockX', fee: 9, pay: 3, fixed: 0 },
+  { id: 'goat', name: 'GOAT', fee: 9.5, pay: 2.9, fixed: 5 },
+  { id: 'flightClub', name: 'Flight Club', fee: 20, pay: 0, fixed: 0 },
+  { id: 'stadiumGoods', name: 'Stadium Goods', fee: 20, pay: 0, fixed: 0 },
+];
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+const saved = store.get('fees') || {};
+PLATFORMS.forEach(p => Object.assign(p, saved[p.id] || {}));
+
+const feesEl = document.getElementById('fees');
+PLATFORMS.forEach(p => {
+  feesEl.insertAdjacentHTML('beforeend', `<span>${p.name}</span>` +
+    ['fee', 'pay', 'fixed'].map(k => `<input type="number" step="0.1" data-p="${p.id}" data-k="${k}" value="${p[k]}">`).join(''));
+});
+feesEl.addEventListener('input', e => {
+  const p = PLATFORMS.find(x => x.id === e.target.dataset.p); if (!p) return;
+  p[e.target.dataset.k] = Number(e.target.value) || 0;
+  store.set('fees', Object.fromEntries(PLATFORMS.map(x => [x.id, { fee: x.fee, pay: x.pay, fixed: x.fixed }])));
+  if (last) render(last);
+});
+
+const money = v => v == null || isNaN(v) ? '–' : (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2);
+const num = v => typeof v === 'object' && v ? Number(v.amount ?? v.price ?? v.value) : Number(v);
+function payout(p, price) { return price * (1 - p.fee / 100) * (1 - p.pay / 100) - p.fixed; }
+
+// /productprice usually returns { resellPrices: { stockX: { "9": 120, ... }, goat: {...} } }.
+// Handle a few other shapes too, so the app keeps working if the format grows.
+function sizeTable(prices) {
+  const rp = prices?.resellPrices || prices?.prices || {};
+  const sizes = new Set(); const by = {};
+  PLATFORMS.forEach(p => {
+    let src = rp[p.id] || rp[p.id.toLowerCase()] || {};
+    if (Array.isArray(src)) src = Object.fromEntries(src.map(s => [s.size ?? s.sizeUS, s.price ?? s.lowestAsk]));
+    by[p.id] = {};
+    Object.entries(src).forEach(([s, v]) => { const n = num(v); if (n > 0) { by[p.id][s] = n; sizes.add(s); } });
+  });
+  return { sizes: [...sizes].sort((a, b) => parseFloat(a) - parseFloat(b)), by };
+}
+
+let last = null;
+document.getElementById('f').addEventListener('submit', async e => {
+  e.preventDefault();
+  const out = document.getElementById('out');
+  out.innerHTML = '<div class="empty">Loading prices from 4 marketplaces… (first call can take a few seconds)</div>';
+  try {
+    const r = await fetch('/api/lookup?styleId=' + encodeURIComponent(document.getElementById('sku').value));
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.message || 'Request failed');
+    last = j; render(j);
+  } catch (err) { out.innerHTML = `<div class="empty">${err.message}</div>`; }
+});
+['cost', 'ship'].forEach(id => document.getElementById(id).addEventListener('input', () => last && render(last)));
+
+function render({ product, prices }) {
+  const cost = Number(document.getElementById('cost').value) || 0;
+  const ship = Number(document.getElementById('ship').value) || 0;
+  const title = product?.title || prices?.shoeName || 'Unknown product';
+  const img = product?.image || prices?.thumbnail || '/sneaker.svg';
+  const retail = product?.retailPrice ?? prices?.retailPrice;
+  const { sizes, by } = sizeTable(prices);
+
+  let bestOverall = null;
+  const rows = sizes.map(s => {
+    const cells = PLATFORMS.map(p => {
+      const price = by[p.id][s]; if (!price) return { p, price: null };
+      const net = payout(p, price) - ship; const profit = net - cost;
+      return { p, price, net, profit };
+    });
+    const best = cells.filter(c => c.price).sort((a, b) => b.profit - a.profit)[0];
+    if (best && (!bestOverall || best.profit > bestOverall.profit)) bestOverall = { ...best, size: s };
+    return { s, cells, best };
+  });
+
+  const lowest = prices?.lowestResellPrice || {};
+  document.getElementById('out').innerHTML = `
+    <div class="product">
+      <img src="${img}" alt="">
+      <div><h2>${title}</h2>
+      <div class="small">${product?.styleId || prices?.styleID || ''} · ${product?.colorway || ''}</div>
+      <div class="small">Retail ${money(retail)}${product?.releaseDate ? ' · Released ' + product.releaseDate : ''}</div></div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Best size</div><div class="v">${bestOverall ? 'US ' + bestOverall.size : '–'}</div></div>
+      <div class="kpi"><div class="l">Best platform</div><div class="v">${bestOverall ? bestOverall.p.name : '–'}</div></div>
+      <div class="kpi"><div class="l">Max profit</div><div class="v ${bestOverall?.profit >= 0 ? 'pos' : 'neg'}">${money(bestOverall?.profit)}</div></div>
+      <div class="kpi"><div class="l">Lowest ask StockX / GOAT</div><div class="v">${money(num(lowest.stockX))} / ${money(num(lowest.goat))}</div></div>
+    </div>
+    ${rows.length ? `<table>
+      <tr><th>Size (US)</th>${PLATFORMS.map(p => `<th>${p.name}<br><span class="small">price → profit</span></th>`).join('')}</tr>
+      ${rows.map(r => `<tr><td>${r.s}</td>${r.cells.map(c => c.price
+        ? `<td class="${c === r.best ? 'best' : ''}">${money(c.price)}<span class="p ${c.profit >= 0 ? 'pos' : 'neg'}">${money(c.profit)}</span></td>`
+        : '<td class="small">–</td>').join('')}</tr>`).join('')}
+    </table>` : '<div class="empty">No per-size prices returned for this SKU.</div>'}
+    <p class="small">Profit = price − platform fee − payment fee − fixed fee − your shipping − your cost. Green cell = best payout for that size.</p>`;
+}
+
+fetch('/api/config').then(r => r.json()).then(c => { if (c.demo) document.getElementById('demo').style.display = 'inline-block'; });
+</script>
+</body>
+</html>
