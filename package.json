@@ -1,0 +1,1 @@
+{ "name": "sneaker-resell-profit-calculator", "version": "1.0.0", "description": "StockX vs GOAT vs Flight Club vs Stadium Goods payout and profit per size", "main": "server.js", "scripts": { "start": "node server.js" }, "engines": { "node": ">=18" }, "keywords": ["stockx","goat","sneakers","resell","profit-calculator"], "license": "MIT" }

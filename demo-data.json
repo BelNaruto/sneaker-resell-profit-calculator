@@ -1,0 +1,27 @@
+{
+  "_note": "SAMPLE DATA for demo mode only. Prices are illustrative, not real market data.",
+  "product": {
+    "urlKey": "demo-sneaker-low-white-black",
+    "title": "Demo Sneaker Low 'White Black'",
+    "brand": "Demo Brand",
+    "styleId": "DEMO-100",
+    "colorway": "White/Black-White",
+    "retailPrice": 110,
+    "releaseDate": "2021-03-10",
+    "image": "/sneaker.svg",
+    "url": "https://stockx.com/"
+  },
+  "prices": {
+    "shoeName": "Demo Sneaker Low 'White Black'",
+    "styleID": "DEMO-100",
+    "retailPrice": 110,
+    "thumbnail": "/sneaker.svg",
+    "lowestResellPrice": { "stockX": 98, "goat": 104, "flightClub": 125, "stadiumGoods": 131 },
+    "resellPrices": {
+      "stockX": { "7": 112, "7.5": 108, "8": 104, "8.5": 101, "9": 98, "9.5": 102, "10": 105, "10.5": 109, "11": 114, "12": 121 },
+      "goat": { "7": 118, "7.5": 112, "8": 109, "8.5": 104, "9": 107, "9.5": 106, "10": 110, "10.5": 113, "11": 119, "12": 126 },
+      "flightClub": { "7": 139, "8": 132, "8.5": 128, "9": 125, "10": 130, "11": 141, "12": 149 },
+      "stadiumGoods": { "7": 145, "8": 138, "9": 131, "9.5": 134, "10": 137, "11": 147 }
+    }
+  }
+}
